@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import in.tech_camp.chat_app.custom_user.CustomUserDetail;
@@ -64,18 +65,6 @@ public class RoomController {
       return "rooms/new";
     }
 
-    // RoomEntity roomEntity = new RoomEntity();
-    roomEntity.setName(roomForm.getName());
-    try {
-      roomRepository.insert(roomEntity);
-    } catch (Exception e) {
-      System.out.println("エラー：" + e);
-      List<UserEntity> users = userRepository.findAllExcept(currentUser.getId());
-      model.addAttribute("users", users);
-      model.addAttribute("roomForm", new RoomForm());
-      return "rooms/new";
-    }
-
     List<Integer> memberIds = roomForm.getMemberIds();
     for (Integer userId : memberIds) {
       UserEntity userEntity = userRepository.findById(userId);
@@ -92,6 +81,12 @@ public class RoomController {
         return "rooms/new";
       }
     }
+    return "redirect:/";
+  }
+
+  @PostMapping("/rooms/{roomId}/delete")
+  public String deleteRoom(@PathVariable Integer roomId) {
+    roomRepository.deleteById(roomId);
     return "redirect:/";
   }
 }
