@@ -37,23 +37,39 @@ public class UserController {
     return "users/signUp";
   }
 
-  @PostMapping("/user")
-  public String createUser(@ModelAttribute("userForm") @Validated(ValidationOrder.class) UserForm userForm, BindingResult result, Model model) {
+  @PostMapping("/user") //POSTリクエストを受け取るメソッドを定義
+public String createUser(@ModelAttribute("userForm") @Validated(ValidationOrder.class) UserForm userForm, BindingResult result, Model model)
+{
     userForm.validatePasswordConfirmation(result);
-    if (userRepository.existsByEmail(userForm.getEmail())) {
+    //メールアドレスが既に使用されていないかチェック
+    if(userRepository.existsByEmail(userForm.getEmail()))
+    {
       result.rejectValue("email", "null", "Email already exists");
     }
-
-    if (result.hasErrors()) {
+    //バリデーションエラーがあったらサインアップ画面に止まりエラー表示を行う
+    if (result.hasErrors())
+    {
       List<String> errorMessages = result.getAllErrors().stream()
               .map(DefaultMessageSourceResolvable::getDefaultMessage)
               .collect(Collectors.toList());
-
       model.addAttribute("errorMessages", errorMessages);
       model.addAttribute("userForm", userForm);
       return "users/signUp";
     }
-
+    UserEntity userEntity = new UserEntity();
+    userEntity.setName(userForm.getName());
+    userEntity.setEmail(userForm.getEmail());
+    userEntity.setPassword(userForm.getPassword());
+    try
+    {
+      userService.createUserWithEncryptedPassword(userEntity); //暗号化
+    }
+    catch(Exception e) //保存に失敗したとき
+    {
+      System.out.println("エラー" + e);
+      model.addAttribute("userForm", userForm);
+      return "users/signUp";
+    }
     return "redirect:/";
   }
 
